@@ -1,16 +1,16 @@
 IDIR =../include
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -Wall -pipe -O2
 
 ODIR=obj
 LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = chunk.h common.h memory.h
+_DEPS = chunk.h common.h memory.h debug.h value.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o chunk.o memory.o
+_OBJ = main.o chunk.o memory.o debug.o value.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
