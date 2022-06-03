@@ -7,17 +7,17 @@ LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = chunk.h common.h memory.h debug.h value.h vm.h compiler.h scanner.h
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+SRC=.
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS:= $(patsubst $(SRC)/%.c,$(ODIR)/%.o,$(SRCS))
 
-_OBJ = main.o chunk.o memory.o debug.o value.o vm.o compiler.o scanner.o
-OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
-
+_DEPS = $(wildcard $(IDIR)/*.h)
+DEPS = $(patsubst %,$(IDIR)/%,$(wildcard $(IDIR)/*.h))
 
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-clox: $(OBJ)
+clox: $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 	mv clox ../
 
