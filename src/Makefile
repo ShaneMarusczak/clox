@@ -8,10 +8,8 @@ LDIR =../lib
 LIBS=-lm
 
 SRC=.
-SRCS=$(wildcard $(SRC)/*.c)
-OBJS:= $(patsubst $(SRC)/%.c,$(ODIR)/%.o,$(SRCS))
+OBJS:= $(patsubst $(SRC)/%.c,$(ODIR)/%.o,$(wildcard $(SRC)/*.c))
 
-_DEPS = $(wildcard $(IDIR)/*.h)
 DEPS = $(patsubst %,$(IDIR)/%,$(wildcard $(IDIR)/*.h))
 
 $(ODIR)/%.o: %.c $(DEPS)
