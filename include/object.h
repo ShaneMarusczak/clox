@@ -26,9 +26,12 @@ struct ObjString
 {
     Obj obj;
     int length;
+    uint32_t hash;
     char chars[];
 };
 
+uint32_t hashString(const char *key, int length);
+ObjString *internString(ObjString *string);
 ObjString *makeString(int length);
 ObjString *copyString(const char *chars, int length);
 void printObject(Value value);

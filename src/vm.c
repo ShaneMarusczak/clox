@@ -34,10 +34,12 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.strings);
 }
 
 void freeVM()
 {
+    freeTable(&vm.strings);
     freeObjects();
 }
 
@@ -73,6 +75,9 @@ static void concatenate()
     memcpy(result->chars, a->chars, a->length);
     memcpy(result->chars + a->length, b->chars, b->length);
     result->chars[length] = '\0';
+    result->hash = hashString(result->chars, length);
+
+    result = internString(result);
 
     push(OBJ_VAL(result));
 }
