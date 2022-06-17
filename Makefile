@@ -1,6 +1,6 @@
 IDIR:=include
 CC:=cc
-CFLAGS:=-I$(IDIR) -Wall -pipe -O2
+CFLAGS:=-I$(IDIR) -Wall -pipe -O2 -g
 BIN:=bin
 
 SRC:=src
