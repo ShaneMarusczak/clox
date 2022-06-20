@@ -85,6 +85,19 @@ static void concatenate()
     push(OBJ_VAL(result));
 }
 
+static void printStack()
+{
+    printf("\nstack:  ");
+    for (Value *slot = vm.stack; slot < vm.stackTop; slot++)
+    {
+        printf("[ ");
+        printValue(*slot);
+        printf(" ]");
+    }
+    printf("\n\n");
+    disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+}
+
 static InterpretResult run()
 {
 #define READ_BYTE() (*vm.ip++)
@@ -106,15 +119,7 @@ static InterpretResult run()
     for (;;)
     {
 #ifdef DEBUG_TRACE_EXECUTION
-        printf("          ");
-        for (Value *slot = vm.stack; slot < vm.stackTop; slot++)
-        {
-            printf("[ ");
-            printValue(*slot);
-            printf(" ]");
-        }
-        printf("\n");
-        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+        printStack();
 #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE())
@@ -216,6 +221,28 @@ static InterpretResult run()
         case OP_POP:
         {
             pop();
+            break;
+        }
+        case OP_POPN:
+        {
+            uint8_t n = READ_BYTE();
+            while (n > 0)
+            {
+                pop();
+                n--;
+            }
+            break;
+        }
+        case OP_GET_LOCAL:
+        {
+            uint8_t slot = READ_BYTE();
+            push(vm.stack[slot]);
+            break;
+        }
+        case OP_SET_LOCAL:
+        {
+            uint8_t slot = READ_BYTE();
+            vm.stack[slot] = peek(0);
             break;
         }
         case OP_DEFINE_GLOBAL:
