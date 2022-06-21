@@ -115,7 +115,6 @@ static InterpretResult run()
         double a = AS_NUMBER(pop());                    \
         push(valueType(a op b));                        \
     } while (false)
-
     for (;;)
     {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -302,9 +301,13 @@ InterpretResult interpret(const char *source)
 
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
-
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("\n== start vm run logging ==\n");
+#endif
     InterpretResult result = run();
-
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("\n== end vm run logging ==\n");
+#endif
     freeChunk(&chunk);
     return result;
 }

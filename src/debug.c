@@ -1,15 +1,46 @@
 #include <stdio.h>
 
 #include "debug.h"
+#include "object.h"
 #include "value.h"
+
+static void printConstants(Chunk *chunk)
+{
+    printf("\nconstants:  ");
+    int rowLength = 0;
+    for (int i = 0; i < chunk->constants.count - 1; i++)
+    {
+        Value v = chunk->constants.values[i];
+        printf("[ ");
+        printValue(v);
+        printf(" ]");
+        if (IS_STRING(v))
+        {
+            rowLength += AS_STRING(v)->length;
+        }
+        else if (IS_BOOL(v) || IS_NUMBER(v) || IS_NIL(v))
+        {
+            rowLength += 6;
+        }
+        if (rowLength > 60)
+        {
+            printf("\n");
+            printf("            ");
+            rowLength = 0;
+        }
+    }
+    printf("\n\n\n");
+}
 
 void disassembleChunk(Chunk *chunk, const char *name)
 {
-    printf("== %s ==\n", name);
+    printf("== start chunk: %s ==\n", name);
+    printConstants(chunk);
     for (int offset = 0; offset < chunk->count;)
     {
         offset = disassembleInstruction(chunk, offset);
     }
+    printf("== end chunk: %s ==\n\n\n", name);
 }
 
 static int simpleInstruction(const char *name, int offset)
