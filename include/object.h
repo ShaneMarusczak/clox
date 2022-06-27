@@ -44,7 +44,6 @@ typedef struct
 {
     Obj obj;
     NativeFn function;
-    int arity;
     const char *name;
 } ObjNative;
 
@@ -57,7 +56,7 @@ struct ObjString
 };
 
 ObjFunction *newFunction();
-ObjNative *newNative(NativeFn function, int arity, const char *name);
+ObjNative *newNative(NativeFn function, const char *name);
 uint32_t hashString(const char *key, int length);
 ObjString *internString(ObjString *string);
 ObjString *makeString(int length);

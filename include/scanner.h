@@ -41,7 +41,7 @@ typedef enum
     TOKEN_TRUE,
     TOKEN_VAR,
     TOKEN_WHILE,
-    TOKEN_ERROR,
+    TOKEN_ERROR, // communicate a parsing error to the compiler
     TOKEN_EOF
 } TokenType;
 

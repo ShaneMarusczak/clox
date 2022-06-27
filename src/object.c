@@ -29,11 +29,10 @@ ObjFunction *newFunction()
     return function;
 }
 
-ObjNative *newNative(NativeFn function, int arrity, const char *name)
+ObjNative *newNative(NativeFn function, const char *name)
 {
     ObjNative *native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
     native->function = function;
-    native->arity = arrity;
     native->name = name;
     return native;
 }

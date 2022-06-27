@@ -11,7 +11,9 @@ typedef enum
     VAL_BOOL,
     VAL_NIL,
     VAL_NUMBER,
-    VAL_OBJ
+    VAL_OBJ,
+    VAL_ERROR_ARGC, // used to communicate errors to the vm when running native functions
+    VAL_ERROR_ARGV
 } ValueType;
 
 typedef struct
@@ -29,6 +31,8 @@ typedef struct
 #define IS_NIL(value) ((value).type == VAL_NIL)
 #define IS_NUMBER(value) ((value).type == VAL_NUMBER)
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
+#define IS_ERR_ARGC(value) ((value).type == VAL_ERROR_ARGC)
+#define IS_ERR_ARGV(value) ((value).type == VAL_ERROR_ARGV)
 
 #define AS_BOOL(value) ((value).as.boolean)
 #define AS_NUMBER(value) ((value).as.number)
@@ -36,6 +40,8 @@ typedef struct
 
 #define BOOL_VAL(value) ((Value){VAL_BOOL, {.boolean = value}})
 #define NIL_VAL ((Value){VAL_NIL, {.number = 0}})
+#define ERROR_ARGC ((Value){VAL_ERROR_ARGC, {.number = 0}})
+#define ERROR_ARGV ((Value){VAL_ERROR_ARGV, {.number = 0}})
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 #define OBJ_VAL(object) ((Value){VAL_OBJ, {.obj = (Obj *)object}})
 

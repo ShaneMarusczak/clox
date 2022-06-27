@@ -46,6 +46,12 @@ void printValue(Value value)
         printf("nil");
         break;
     }
+    case VAL_ERROR_ARGC:
+    case VAL_ERROR_ARGV:
+    {
+        printf("error");
+        break;
+    }
     case VAL_NUMBER:
     {
         printf("%g", AS_NUMBER(value));
@@ -69,6 +75,8 @@ bool valuesEqual(Value a, Value b)
     case VAL_BOOL:
         return AS_BOOL(a) == AS_BOOL(b);
     case VAL_NIL:
+    case VAL_ERROR_ARGC:
+    case VAL_ERROR_ARGV:
         return true;
     case VAL_NUMBER:
         return AS_NUMBER(a) == AS_NUMBER(b);

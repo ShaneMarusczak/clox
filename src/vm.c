@@ -1,29 +1,16 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
 #include "object.h"
 #include "memory.h"
+#include "natives.h"
 #include "vm.h"
 
 VM vm;
-
-#pragma region natives
-static Value clockNative(__attribute__((unused)) int argCount, __attribute__((unused)) Value *args)
-{
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
-}
-
-static Value tripleNative(__attribute__((unused)) int argCount, Value *args)
-{
-    return NUMBER_VAL(AS_NUMBER(args[0]) * 3);
-}
-
-#pragma endregion
 
 static void resetStack()
 {
@@ -58,10 +45,10 @@ static void runtimeError(const char *format, ...)
     resetStack();
 }
 
-static void defineNative(const char *name, NativeFn function, int arity)
+static void defineNative(const char *name, NativeFn function)
 {
     push(OBJ_VAL(copyString(name, (int)strlen(name))));
-    push(OBJ_VAL(newNative(function, arity, name)));
+    push(OBJ_VAL(newNative(function, name)));
     tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
     pop();
     pop();
@@ -75,8 +62,8 @@ void initVM()
     initTable(&vm.globals);
     initTable(&vm.strings);
 
-    defineNative("clock", clockNative, 0);
-    defineNative("triple", tripleNative, 1);
+    defineNative("clock", n_clock);
+    defineNative("triple", n_triple);
 }
 
 void freeVM()
@@ -126,14 +113,19 @@ static bool callValue(Value callee, int argCount)
         {
         case OBJ_NATIVE:
         {
-            ObjNative *nativeObj = AS_NATIVE_OBJ(callee);
-            NativeFn native = nativeObj->function;
-            if (argCount != nativeObj->arity)
+            ObjNative *native = AS_NATIVE_OBJ(callee);
+            NativeFn func = native->function;
+            Value result = func(argCount, vm.stackTop - argCount);
+            if (IS_ERR_ARGC(result))
             {
-                runtimeError("Invalid arg count for native function: %s", nativeObj->name);
+                runtimeError("Invalid argument count for native function '%s'.", native->name);
                 return false;
             }
-            Value result = native(argCount, vm.stackTop - argCount);
+            if (IS_ERR_ARGV(result))
+            {
+                runtimeError("Invalid argument type for native function '%s'.", native->name);
+                return false;
+            }
             vm.stackTop -= argCount + 1;
             push(result);
             return true;
@@ -188,16 +180,18 @@ static void printStack(CallFrame *frame)
 static InterpretResult run()
 {
     CallFrame *frame = &vm.frames[vm.frameCount - 1];
-#define READ_BYTE() (*frame->ip++)
+    register uint8_t *ip = frame->ip;
+#define READ_BYTE() (*ip++)
 #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_SHORT() \
-    (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+    (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
 #define BINARY_OP(valueType, op)                        \
     do                                                  \
     {                                                   \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) \
         {                                               \
+            frame->ip = ip;                             \
             runtimeError("Operands must be numbers.");  \
             return INTERPERT_RUNTIME_ERROR;             \
         }                                               \
@@ -265,6 +259,7 @@ static InterpretResult run()
             }
             else
             {
+                frame->ip = ip;
                 runtimeError("+ can only be used to concatenate two strings or add two numbers.");
                 return INTERPERT_RUNTIME_ERROR;
             }
@@ -290,11 +285,11 @@ static InterpretResult run()
             push(BOOL_VAL(isFalsey(pop())));
             break;
         }
-
         case OP_NEGATE:
         {
             if (!IS_NUMBER(peek(0)))
             {
+                frame->ip = ip;
                 runtimeError("Operand must be a number.");
                 return INTERPERT_RUNTIME_ERROR;
             }
@@ -347,6 +342,7 @@ static InterpretResult run()
             Value value;
             if (!tableGet(&vm.globals, name, &value))
             {
+                frame->ip = ip;
                 runtimeError("Undefined variable '%s'.", name->chars);
                 return INTERPERT_RUNTIME_ERROR;
             }
@@ -359,6 +355,7 @@ static InterpretResult run()
             if (tableSet(&vm.globals, name, peek(0)))
             {
                 tableDelete(&vm.globals, name);
+                frame->ip = ip;
                 runtimeError("Undefined variable '%s'.", name->chars);
                 return INTERPERT_RUNTIME_ERROR;
             }
@@ -367,30 +364,32 @@ static InterpretResult run()
         case OP_JUMP:
         {
             uint16_t offset = READ_SHORT();
-            frame->ip += offset;
+            ip += offset;
             break;
         }
         case OP_JUMP_IF_FALSE:
         {
             uint16_t offset = READ_SHORT();
             if (isFalsey(peek(0)))
-                frame->ip += offset;
+                ip += offset;
             break;
         }
         case OP_LOOP:
         {
             uint16_t offset = READ_SHORT();
-            frame->ip -= offset;
+            ip -= offset;
             break;
         }
         case OP_CALL:
         {
             int argCount = READ_BYTE();
+            frame->ip = ip;
             if (!callValue(peek(argCount), argCount))
             {
                 return INTERPERT_RUNTIME_ERROR;
             }
             frame = &vm.frames[vm.frameCount - 1];
+            ip = frame->ip;
             break;
         }
         case OP_RETURN:
@@ -406,6 +405,7 @@ static InterpretResult run()
             vm.stackTop = frame->slots;
             push(result);
             frame = &vm.frames[vm.frameCount - 1];
+            ip = frame->ip;
             break;
         }
         }
