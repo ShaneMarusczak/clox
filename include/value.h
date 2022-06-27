@@ -13,7 +13,7 @@ typedef enum
     VAL_NUMBER,
     VAL_OBJ,
     VAL_ERROR_ARGC, // used to communicate errors to the vm when running native functions
-    VAL_ERROR_ARGV
+    VAL_ERROR_ARGV  //
 } ValueType;
 
 typedef struct

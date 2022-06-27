@@ -98,6 +98,12 @@ static bool call(ObjFunction *function, int argCount)
         return false;
     }
 
+    if (function->arity != argCount)
+    {
+        runtimeError("Expected %d arguments, got %d, for function '%s'.", function->arity, argCount, function->name->chars);
+        return false;
+    }
+
     CallFrame *frame = &vm.frames[vm.frameCount++];
     frame->function = function;
     frame->ip = function->chunk.code;
