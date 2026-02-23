@@ -11,6 +11,7 @@
 
 typedef struct
 {
+    ObjClosure *closure;
     ObjFunction *function;
     uint8_t *ip;
     Value *slots;
@@ -25,6 +26,7 @@ typedef struct
     Value *stackTop;
     Table globals;
     Table strings;
+    ObjUpvalue *openUpvalues;
     Obj *objects;
 } VM;
 
